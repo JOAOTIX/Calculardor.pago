@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import toast, { Toaster } from 'react-hot-toast'
@@ -23,10 +23,11 @@ interface SemanaData {
   registros: RegistroDiario[];
 }
 
+// COMPONENTE: Selector de Hora 12h con AM/PM libre, validado
 const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
   let h12 = '';
   let min = '';
-  let ampm = 'AM';
+  let ampm = 'AM'; // Valor visual por defecto
 
   if (value) {
     const [hStr, mStr] = value.split(':');
@@ -50,6 +51,19 @@ const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string
     if (newAmpm === 'AM' && h24 === 12) h24 = 0;
     
     onChange(`${h24.toString().padStart(2, '0')}:${mToUse}`);
+  };
+
+  // Función para alternar AM/PM con validación de hora vacía
+  const handleAmpmToggle = () => {
+    if (!value) {
+      toast.error('Primero debes ingresar la hora.', {
+        style: { borderRadius: '10px', background: '#333', color: '#fff', fontSize: '14px' },
+        duration: 2500,
+      });
+      return;
+    }
+    // Si ya hay hora, cambiar al contrario
+    handleChange(h12, min, ampm === 'AM' ? 'PM' : 'AM');
   };
 
   return (
@@ -82,8 +96,8 @@ const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string
 
       <button
         type="button"
-        onClick={() => handleChange(h12, min, ampm === 'AM' ? 'PM' : 'AM')}
-        className={`h-full px-2 text-[11px] font-black transition-colors w-[38px] flex items-center justify-center ${
+        onClick={handleAmpmToggle}
+        className={`h-full px-2 text-[11px] font-black transition-colors w-[38px] flex items-center justify-center cursor-pointer ${
           ampm === 'AM' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
         }`}
       >
@@ -194,7 +208,7 @@ function App() {
       // 1. Título de la semana (Morado)
       const titleRow = sheet.addRow([semana.titulo]);
       sheet.mergeCells(`A${titleRow.number}:D${titleRow.number}`);
-      titleRow.height = 30; // Dar un poco más de alto por si hay 2 líneas
+      titleRow.height = 30; 
       for(let i = 1; i <= 4; i++) {
         const cell = titleRow.getCell(i);
         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -517,7 +531,6 @@ function App() {
                           </span>
                         </div>
 
-                        {/* ✅ AQUI USAMOS EL NUEVO COMPONENTE DE 12 HORAS */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1.5 block">Ingreso</label>
@@ -538,7 +551,6 @@ function App() {
                     );
                   })}
                   
-                  {/* Botón de Añadir Fila (Se oculta si ya hay 7) */}
                   {semana.registros.length < 7 && (
                     <button 
                       onClick={() => agregarDia(semana.id)}
