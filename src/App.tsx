@@ -23,6 +23,76 @@ interface SemanaData {
   registros: RegistroDiario[];
 }
 
+const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
+  let h12 = '';
+  let min = '';
+  let ampm = 'AM';
+
+  if (value) {
+    const [hStr, mStr] = value.split(':');
+    const h24 = parseInt(hStr, 10);
+    min = mStr;
+    ampm = h24 >= 12 ? 'PM' : 'AM';
+    const h = h24 % 12 || 12;
+    h12 = h.toString().padStart(2, '0');
+  }
+
+  const handleChange = (newH: string, newM: string, newAmpm: string) => {
+    if (!newH && !newM) {
+      onChange('');
+      return;
+    }
+    const hToUse = newH || '12';
+    const mToUse = newM || '00';
+    let h24 = parseInt(hToUse, 10);
+    
+    if (newAmpm === 'PM' && h24 < 12) h24 += 12;
+    if (newAmpm === 'AM' && h24 === 12) h24 = 0;
+    
+    onChange(`${h24.toString().padStart(2, '0')}:${mToUse}`);
+  };
+
+  return (
+    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 h-[38px] w-full transition-all shadow-sm">
+      <select 
+        value={h12}
+        onChange={(e) => handleChange(e.target.value, min, ampm)}
+        className="flex-1 bg-transparent h-full pl-2 pr-1 outline-none text-center font-bold text-gray-700 cursor-pointer appearance-none text-sm"
+      >
+        <option value="" disabled>--</option>
+        {Array.from({length: 12}, (_, i) => {
+          const v = (i+1).toString().padStart(2, '0');
+          return <option key={v} value={v}>{v}</option>;
+        })}
+      </select>
+      
+      <span className="text-gray-400 font-black pb-0.5">:</span>
+      
+      <select 
+        value={min}
+        onChange={(e) => handleChange(h12, e.target.value, ampm)}
+        className="flex-1 bg-transparent h-full pl-1 pr-2 outline-none text-center font-bold text-gray-700 cursor-pointer appearance-none text-sm"
+      >
+        <option value="" disabled>--</option>
+        {Array.from({length: 60}, (_, i) => {
+          const v = i.toString().padStart(2, '0');
+          return <option key={v} value={v}>{v}</option>;
+        })}
+      </select>
+
+      <button
+        type="button"
+        onClick={() => handleChange(h12, min, ampm === 'AM' ? 'PM' : 'AM')}
+        className={`h-full px-2 text-[11px] font-black transition-colors w-[38px] flex items-center justify-center ${
+          ampm === 'AM' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+        }`}
+      >
+        {ampm}
+      </button>
+    </div>
+  );
+};
+
 function App() {
   // Configuración general
   const [pagoPorHora, setPagoPorHora] = useState<number | ''>('');
@@ -40,7 +110,9 @@ function App() {
   
   // Estado para las 3 semanas iniciales
   const [semanas, setSemanas] = useState<SemanaData[]>([
-    { id: crypto.randomUUID(), titulo: "SEMANA DEL 10-15 DE AGOSTO", registros: [{ id: crypto.randomUUID(), dia: 'Lunes', horaEntrada: '', horaSalida: '' }] },
+    { id: crypto.randomUUID(), titulo: "SEMANA DEL 10-15 DE AGOSTO", registros: [{ id: crypto.randomUUID(), dia: 'Martes', horaEntrada: '', horaSalida: '' }] },
+    { id: crypto.randomUUID(), titulo: "SEMANA DEL 17-22 DE AGOSTO", registros: [] },
+    { id: crypto.randomUUID(), titulo: "SEMANA DEL 22-29 DE AGOSTO", registros: [] },
   ]);
 
   // Función para calcular horas en formato decimal
@@ -259,11 +331,10 @@ function App() {
     setSemanas(semanas.map(s => s.id === semanaId ? { ...s, titulo: nuevoTitulo } : s));
   };
 
-  // Ajusta la altura del Textarea cuando React lo dibuja en pantalla o cuando escribes
   const ajustarAltura = (el: HTMLTextAreaElement | null) => {
     if (el) {
-      el.style.height = 'auto'; // Resetea la altura
-      el.style.height = `${el.scrollHeight}px`; // Asigna la altura exacta del texto
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`; 
     }
   };
 
@@ -271,10 +342,9 @@ function App() {
   const agregarDia = (semanaId: string) => {
     setSemanas(semanas.map(s => {
       if (s.id === semanaId) {
-        // Validar que no haya más de 7 días
         if (s.registros.length >= 7) {
           toast.error('No puedes agregar más de 7 días a una semana.', { duration: 3000 });
-          return s; // Devolver la semana sin cambios
+          return s; 
         }
         return { 
           ...s, 
@@ -380,8 +450,6 @@ function App() {
                 {/* Cabecera de la Semana */}
                 <div className="bg-gray-50 p-4 border-b border-gray-100 pt-5">
                   <div className="flex justify-between items-start gap-3 mb-3">
-                    
-                    {/* ✅ Se aplica ref={ajustarAltura} aquí */}
                     <textarea 
                       ref={ajustarAltura}
                       value={semana.titulo}
@@ -404,7 +472,6 @@ function App() {
                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </button>
-
                   </div>
                   
                   <div className="flex justify-between items-center bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-100 text-sm">
@@ -426,7 +493,7 @@ function App() {
                       <div key={registro.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:border-blue-300 transition-colors group relative">
                         <button 
                           onClick={() => eliminarRegistro(semana.id, registro.id)}
-                          className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-500 hover:text-white w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold shadow-sm transition-colors opacity-80 group-hover:opacity-100"
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-500 hover:text-white w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold shadow-sm transition-colors opacity-80 group-hover:opacity-100 z-10"
                         >
                           ×
                         </button>
@@ -450,23 +517,20 @@ function App() {
                           </span>
                         </div>
 
+                        {/* ✅ AQUI USAMOS EL NUEVO COMPONENTE DE 12 HORAS */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1.5 block">Ingreso</label>
-                            <input 
-                              type="time" 
+                            <TimeInput12h 
                               value={registro.horaEntrada}
-                              onChange={(e) => actualizarRegistro(semana.id, registro.id, 'horaEntrada', e.target.value)}
-                              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                              onChange={(val) => actualizarRegistro(semana.id, registro.id, 'horaEntrada', val)}
                             />
                           </div>
                           <div>
                             <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1.5 block">Salida</label>
-                            <input 
-                              type="time" 
+                            <TimeInput12h 
                               value={registro.horaSalida}
-                              onChange={(e) => actualizarRegistro(semana.id, registro.id, 'horaSalida', e.target.value)}
-                              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                              onChange={(val) => actualizarRegistro(semana.id, registro.id, 'horaSalida', val)}
                             />
                           </div>
                         </div>
@@ -474,6 +538,7 @@ function App() {
                     );
                   })}
                   
+                  {/* Botón de Añadir Fila (Se oculta si ya hay 7) */}
                   {semana.registros.length < 7 && (
                     <button 
                       onClick={() => agregarDia(semana.id)}
