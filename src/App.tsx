@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo} from 'react'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import toast, { Toaster } from 'react-hot-toast'
@@ -23,11 +23,10 @@ interface SemanaData {
   registros: RegistroDiario[];
 }
 
-// COMPONENTE: Selector de Hora 12h con AM/PM libre, validado
 const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
   let h12 = '';
   let min = '';
-  let ampm = 'AM'; // Valor visual por defecto
+  let ampm = 'AM'; 
 
   if (value) {
     const [hStr, mStr] = value.split(':');
@@ -53,7 +52,6 @@ const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string
     onChange(`${h24.toString().padStart(2, '0')}:${mToUse}`);
   };
 
-  // Función para alternar AM/PM con validación de hora vacía
   const handleAmpmToggle = () => {
     if (!value) {
       toast.error('Primero debes ingresar la hora.', {
@@ -62,7 +60,6 @@ const TimeInput12h = ({ value, onChange }: { value: string, onChange: (v: string
       });
       return;
     }
-    // Si ya hay hora, cambiar al contrario
     handleChange(h12, min, ampm === 'AM' ? 'PM' : 'AM');
   };
 
@@ -111,7 +108,6 @@ function App() {
   // Configuración general
   const [pagoPorHora, setPagoPorHora] = useState<number | ''>('');
 
-  // Arreglo de días dinámicos
   const [dias] = useState<DiaData[]>([
     { id: 1, dia: 'Lunes' },
     { id: 2, dia: 'Martes' },
@@ -122,14 +118,12 @@ function App() {
     { id: 7, dia: 'Domingo' },
   ]);
   
-  // Estado para las 3 semanas iniciales
   const [semanas, setSemanas] = useState<SemanaData[]>([
     { id: crypto.randomUUID(), titulo: "SEMANA DEL 10-15 DE AGOSTO", registros: [{ id: crypto.randomUUID(), dia: 'Martes', horaEntrada: '', horaSalida: '' }] },
     { id: crypto.randomUUID(), titulo: "SEMANA DEL 17-22 DE AGOSTO", registros: [] },
     { id: crypto.randomUUID(), titulo: "SEMANA DEL 22-29 DE AGOSTO", registros: [] },
   ]);
 
-  // Función para calcular horas en formato decimal
   const calcularHorasDecimal = (entrada: string, salida: string): number => {
     if (!entrada || !salida) return 0;
     const [entHora, entMin] = entrada.split(':').map(Number);
@@ -143,7 +137,6 @@ function App() {
     return (fechaSalida.getTime() - fechaEntrada.getTime()) / (1000 * 60 * 60);
   };
 
-  // Convertir decimal a formato HH:MM
   const formatoHorasMinutos = (decimalHoras: number, paraExcel = false) => {
     if (decimalHoras === 0) return paraExcel ? "00:00:00" : "--:--";
     const h = Math.floor(decimalHoras);
@@ -317,7 +310,6 @@ function App() {
     });
   };
 
-  // --- ACCIONES: Manejo de Semanas ---
   const agregarSemana = () => {
     if (semanas.length >= 4) {
       toast.error('Solo se pueden agregar hasta 4 semanas.', { duration: 3000 });
@@ -352,7 +344,6 @@ function App() {
     }
   };
 
-  // Acciones de Días dentro de una Semana
   const agregarDia = (semanaId: string) => {
     setSemanas(semanas.map(s => {
       if (s.id === semanaId) {
@@ -385,7 +376,6 @@ function App() {
     ));
   };
 
-  // Cálculos por semana y generales
   const subtotales = useMemo(() => {
     return semanas.map(semana => {
       let horasDecimal = 0;
