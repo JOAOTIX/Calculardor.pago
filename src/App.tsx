@@ -555,7 +555,7 @@ function App() {
           })}
 
           {/* Tarjeta para Añadir Nueva Semana */}
-          {semanas.length < 4 && (
+          {semanas.length < 10 && (
             <button 
               onClick={agregarSemana}
               className="bg-transparent border-2 border-dashed border-blue-300 rounded-2xl flex flex-col items-center justify-center p-8 text-blue-500 hover:bg-blue-50 hover:border-blue-400 transition-all min-h-[300px] h-full"
