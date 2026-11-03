@@ -311,8 +311,8 @@ function App() {
   };
 
   const agregarSemana = () => {
-    if (semanas.length >= 4) {
-      toast.error('Solo se pueden agregar hasta 4 semanas.', { duration: 3000 });
+    if (semanas.length >= 10) {
+      toast.error('Solo se pueden agregar hasta 10 semanas.', { duration: 3000 });
       return;
     }
     
